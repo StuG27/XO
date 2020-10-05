@@ -98,7 +98,7 @@ public class Game extends AppCompatActivity{
                 onButtons(1);
                 mText.setText("Ваш ход");
                 LogicX(aiTurn);
-                //aiTurn=turnAi(aiTurn);
+                turnAi(X,O,aiTurn);
             }
         });
 
@@ -125,8 +125,8 @@ public class Game extends AppCompatActivity{
                 if((mMode==1)&&(aiSymbol==1)) {
                     turnHuman(aiTurn, num);
                     LogicX(aiTurn);
-                   // aiTurn=turnAi(aiTurn);
-                   // aiTurn=check(aiTurn);
+                    turnAi(X,O,aiTurn);
+                    check(aiTurn);
                 }
             }
         };
@@ -148,7 +148,10 @@ public class Game extends AppCompatActivity{
     }
 //__________________________________________________________________________________________________
     private void turnHuman(int aiTurn[], int num) {
+        //0-порядок хода, 1-ход ИИ, 2-ход игрока, 3-признак 1го хода,
+        //4-счётчик ничьей, 5-флаг победы, 6-версия поворота
         pushButton(num, 0);
+        aiTurn[2]=num;
         if (aiTurn[3]==0){
             aiTurn[6]=rotateNumber(aiTurn[2]);
             aiTurn[3]=1;
@@ -169,8 +172,6 @@ public class Game extends AppCompatActivity{
     }
 //__________________________________________________________________________________________________
     private void turnAi(boolean[] X,boolean[] O, int aiTurn[]) {
-        //0-порядок хода, 1-ход ИИ, 2-ход игрока, 3-признак 1го хода,
-        //4-счётчик ничьей, 5-флаг победы, 6-версия поворота
         if(aiTurn[1]==0){
             aiTurn[1]=сheckTwoInRow(X,O);//Можно ли победить?
         }
@@ -180,9 +181,26 @@ public class Game extends AppCompatActivity{
         if(aiTurn[1]==0) {
             aiTurn[1]=сheckFreeSpace(X,O);//Осталось 2 клетки
         }
+        addTurn(O,X,aiTurn[1],1);
         aiTurn[1]=rotateAway(aiTurn[1], aiTurn[6]);
         pushButton(aiTurn[1], 1);
-        addTurn(O,X,aiTurn[1],1);
+    }
+//__________________________________________________________________________________________________
+    private void check(int aiTurn[]) {
+        //0-порядок хода, 1-ход ИИ, 2-ход игрока, 3-признак 1го хода,
+        //4-счётчик ничьей, 5-флаг победы, 6-версия поворота
+        aiTurn[5]=сheckWin(X);
+        if(aiTurn[5]==1) {
+            offButtons(0);
+            mText.setText("Вы проиграли");
+            mButtonB.setVisibility(View.VISIBLE);
+        }
+        aiTurn[4]++;
+        if ((aiTurn[4]==4)&&(aiTurn[5]==0)) {
+            offButtons(0);
+            mText.setText("Ничья");
+            mButtonB.setVisibility(View.VISIBLE);
+        }
     }
 //__________________________________________________________________________________________________
     private void turn(int num, boolean[] X,boolean[] O, int turn[]) {
@@ -248,8 +266,8 @@ public class Game extends AppCompatActivity{
         return i;
     }
 //__________________________________________________________________________________________________
-    private void offButtons(int i) {
-        if(i==0) {
+    private void offButtons(int visability) {
+        if(visability==0) {
             mButton1.setEnabled(false);
             mButton2.setEnabled(false);
             mButton3.setEnabled(false);
@@ -273,8 +291,8 @@ public class Game extends AppCompatActivity{
         }
     }
 //__________________________________________________________________________________________________
-    private void onButtons(int i) {
-        if(i==0) {
+    private void onButtons(int visability) {
+        if(visability==0) {
             mButton1.setEnabled(true);
             mButton2.setEnabled(true);
             mButton3.setEnabled(true);
@@ -326,7 +344,7 @@ public class Game extends AppCompatActivity{
             }
             else if(logic[2]==8) {
                 int R = (int) (Math.random() * 2);
-                int[] freeTurnsTemp0 = {3, 6};
+                int[] freeTurnsTemp0 = {3,6};
                 int num = freeTurnsTemp0[R];
                 logic[1] = num;
                 logic[0] = 10;
@@ -339,14 +357,14 @@ public class Game extends AppCompatActivity{
         else if(logic[0]==3) {
             if ((logic[2] == 2) && (logic[1] == 8)) {
                 int R = (int) (Math.random() * 2);
-                int[] freeTurnsTemp0 = {4, 6};
+                int[] freeTurnsTemp0 = {4,6};
                 int num = freeTurnsTemp0[R];
                 logic[1] = num;
                 logic[0] = 10;
             }
             else if ((logic[2] == 4) && (logic[1] == 6)) {
                 int R = (int) (Math.random() * 2);
-                int[] freeTurnsTemp0 = {2, 8};
+                int[] freeTurnsTemp0 = {2,8};
                 int num = freeTurnsTemp0[R];
                 logic[1] = num;
                 logic[0] = 10;
