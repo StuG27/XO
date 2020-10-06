@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -164,9 +165,11 @@ public class Game extends AppCompatActivity{
         Button button=chooseButton(num);
         button.setEnabled(false);
         if (symbol==0) {
+            button.setTextColor(Color.parseColor("#6200EA"));
             button.setText("0");
         }
         else {
+            button.setTextColor(Color.parseColor("#D50000"));
             button.setText("X");
         }
     }
@@ -178,7 +181,7 @@ public class Game extends AppCompatActivity{
         if(aiTurn[1]==0) {
             aiTurn[1]=сheckTwoInRow(O,X);//Нужно не проиграть
         }
-        if(aiTurn[1]==0) {
+        while(aiTurn[1]==0) {
             aiTurn[1]=сheckFreeSpace(X,O);//Осталось 2 клетки
         }
         addTurn(O,X,aiTurn[1],1);
@@ -196,7 +199,7 @@ public class Game extends AppCompatActivity{
             mButtonB.setVisibility(View.VISIBLE);
         }
         aiTurn[4]++;
-        if ((aiTurn[4]==4)&&(aiTurn[5]==0)) {
+        if ((aiTurn[4]==4)&&(aiTurn[5]==0-0)) {
             offButtons(0);
             mText.setText("Ничья");
             mButtonB.setVisibility(View.VISIBLE);
@@ -204,19 +207,14 @@ public class Game extends AppCompatActivity{
     }
 //__________________________________________________________________________________________________
     private void turn(int num, boolean[] X,boolean[] O, int turn[]) {
-        String symbolStr;
         if(turn[0]==0){
-            symbolStr="0";
             mText.setText("Ход крестиков");
         }
         else{
-            symbolStr="X";
             mText.setText("Ход ноликов");
         }
         int win;
-        Button button=chooseButton(num);
-        button.setEnabled(false);
-        button.setText(symbolStr);
+        pushButton(num,turn[0]);
         addTurn(O,X,num,turn[0]);
         win=сheckWin(O);
         if(win==1) {
@@ -355,14 +353,14 @@ public class Game extends AppCompatActivity{
             }
         }
         else if(logic[0]==3) {
-            if ((logic[2] == 2) && (logic[1] == 8)) {
+            if ((logic[1] == 2) && (logic[2] == 8)) {
                 int R = (int) (Math.random() * 2);
                 int[] freeTurnsTemp0 = {4,6};
                 int num = freeTurnsTemp0[R];
                 logic[1] = num;
                 logic[0] = 10;
             }
-            else if ((logic[2] == 4) && (logic[1] == 6)) {
+            else if ((logic[1] == 4) && (logic[2] == 6)) {
                 int R = (int) (Math.random() * 2);
                 int[] freeTurnsTemp0 = {2,8};
                 int num = freeTurnsTemp0[R];
