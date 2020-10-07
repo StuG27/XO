@@ -29,9 +29,8 @@ public class Game extends AppCompatActivity{
     private boolean[] X = new boolean[9];
     private boolean[] O = new boolean[9];
     private int[] turn = {1,0};
-    private int[] aiTurn = {0,0,0,0,0,0,0};//0-порядок хода, 1-ход ИИ, 2-ход игрока, 3-признак 1го хода,
-    //4-счётчик ничьей, 5-флаг победы, 6-версия поворота
-    private int aiSymbol = 0;
+    private int[] aiTurn = {0,0,0,0,0,0,0,0,0};//0-порядок хода, 1-ход ИИ, 2-ход игрока, 3-признак 1го хода,
+    //4-счётчик ничьей, 5-флаг победы, 6-версия поворота, 7-символ ИИ, 8-символ игрока
     private int mMode;
     private static final String EXTRA_INFO =
             "com.volynkin.test_intent.information";
@@ -84,19 +83,24 @@ public class Game extends AppCompatActivity{
         mButtonX.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                aiSymbol=0;
+                aiTurn[7]=0;
+                aiTurn[8]=1;
                 mButtonX.setVisibility(View.INVISIBLE);
                 mButton0.setVisibility(View.INVISIBLE);
                 onButtons(1);
+                mText.setText("Ваш ход");
+
             }
         });
         mButton0.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                aiSymbol=1;
+                aiTurn[7]=1;
+                aiTurn[8]=0;
                 mButtonX.setVisibility(View.INVISIBLE);
                 mButton0.setVisibility(View.INVISIBLE);
                 onButtons(1);
+                mText.setTextColor(Color.parseColor("#6200EA"));
                 mText.setText("Ваш ход");
                 LogicX(aiTurn);
                 turnAi(X,O,aiTurn);
@@ -123,9 +127,15 @@ public class Game extends AppCompatActivity{
                     turn(num, X, O, turn);
                 }
 
-                if((mMode==1)&&(aiSymbol==1)) {
+                if((mMode==1)&&(aiTurn[7]==1)) {
                     turnHuman(aiTurn, num);
                     LogicX(aiTurn);
+                    turnAi(X,O,aiTurn);
+                    check(aiTurn);
+                }
+                if((mMode==1)&&(aiTurn[7]==0)) {
+                    turnHuman(aiTurn, num);
+                    LogicO(aiTurn);
                     turnAi(X,O,aiTurn);
                     check(aiTurn);
                 }
@@ -150,15 +160,24 @@ public class Game extends AppCompatActivity{
 //__________________________________________________________________________________________________
     private void turnHuman(int aiTurn[], int num) {
         //0-порядок хода, 1-ход ИИ, 2-ход игрока, 3-признак 1го хода,
-        //4-счётчик ничьей, 5-флаг победы, 6-версия поворота
-        pushButton(num, 0);
+        //4-счётчик ничьей, 5-флаг победы, 6-версия поворота, 7-символ ИИ, 8-символ игрока
+        pushButton(num, aiTurn[8]);
         aiTurn[2]=num;
         if (aiTurn[3]==0){
             aiTurn[6]=rotateNumber(aiTurn[2]);
             aiTurn[3]=1;
         }
         aiTurn[2]=rotate(aiTurn[2], aiTurn[6]);
-        addTurn(O,X,aiTurn[2],0);
+        addTurn(O,X,aiTurn[2], aiTurn[8]);
+        if(aiTurn[7]==0) {
+            aiTurn[4]++;
+        }
+        if ((aiTurn[4]==5)&&(aiTurn[5]==0)&&(aiTurn[7]==0)) {
+            offButtons(0);
+            mText.setTextColor(Color.parseColor("#D50000"));
+            mText.setText("Ничья");
+            mButtonB.setVisibility(View.VISIBLE);
+        }
     }
 //__________________________________________________________________________________________________
     private void pushButton(int num, int symbol) {
@@ -175,32 +194,56 @@ public class Game extends AppCompatActivity{
     }
 //__________________________________________________________________________________________________
     private void turnAi(boolean[] X,boolean[] O, int aiTurn[]) {
-        if(aiTurn[1]==0){
-            aiTurn[1]=сheckTwoInRow(X,O);//Можно ли победить?
+        if (aiTurn[7]==1) {
+            if (aiTurn[1] == 0) {
+                aiTurn[1] = сheckTwoInRow(X, O);//Можно ли победить?
+            }
+            if (aiTurn[1] == 0) {
+                aiTurn[1] = сheckTwoInRow(O, X);//Нужно не проиграть
+            }
+            while (aiTurn[1] == 0) {
+                aiTurn[1] = сheckFreeSpace(X, O);//Осталось 1 или 2 клетки
+            }
         }
-        if(aiTurn[1]==0) {
-            aiTurn[1]=сheckTwoInRow(O,X);//Нужно не проиграть
+        else {
+            if (aiTurn[1] == 0) {
+                aiTurn[1] = сheckTwoInRow(O, X);//Можно ли победить?
+            }
+            if (aiTurn[1] == 0) {
+                aiTurn[1] = сheckTwoInRow(X, O);//Нужно не проиграть
+            }
+            if (aiTurn[1] == 0) {
+                aiTurn[1] = сheckFreeSpace(X, O);//Осталось 2 клетки
+            }
         }
-        while(aiTurn[1]==0) {
-            aiTurn[1]=сheckFreeSpace(X,O);//Осталось 2 клетки
+        if (aiTurn[1]!=0) {
+            addTurn(O, X, aiTurn[1], aiTurn[7]);
+            aiTurn[1] = rotateAway(aiTurn[1], aiTurn[6]);
+            pushButton(aiTurn[1], aiTurn[7]);
         }
-        addTurn(O,X,aiTurn[1],1);
-        aiTurn[1]=rotateAway(aiTurn[1], aiTurn[6]);
-        pushButton(aiTurn[1], 1);
     }
 //__________________________________________________________________________________________________
     private void check(int aiTurn[]) {
         //0-порядок хода, 1-ход ИИ, 2-ход игрока, 3-признак 1го хода,
-        //4-счётчик ничьей, 5-флаг победы, 6-версия поворота
-        aiTurn[5]=сheckWin(X);
+        //4-счётчик ничьей, 5-флаг победы, 6-версия поворота, 7-символ ИИ
+        if (aiTurn[7]==1) {
+            aiTurn[5]=сheckWin(X);
+        }
+        else {
+            aiTurn[5]=сheckWin(O);
+        }
         if(aiTurn[5]==1) {
             offButtons(0);
+            mText.setTextColor(Color.parseColor("#D50000"));
             mText.setText("Вы проиграли");
             mButtonB.setVisibility(View.VISIBLE);
         }
-        aiTurn[4]++;
-        if ((aiTurn[4]==4)&&(aiTurn[5]==0-0)) {
+        if(aiTurn[7]==1) {
+            aiTurn[4]++;
+        }
+        if ((aiTurn[4]==4)&&(aiTurn[5]==0)&&(aiTurn[7]==1)) {
             offButtons(0);
+            mText.setTextColor(Color.parseColor("#D50000"));
             mText.setText("Ничья");
             mButtonB.setVisibility(View.VISIBLE);
         }
@@ -208,9 +251,11 @@ public class Game extends AppCompatActivity{
 //__________________________________________________________________________________________________
     private void turn(int num, boolean[] X,boolean[] O, int turn[]) {
         if(turn[0]==0){
+            mText.setTextColor(Color.parseColor("#D50000"));
             mText.setText("Ход крестиков");
         }
         else{
+            mText.setTextColor(Color.parseColor("#6200EA"));
             mText.setText("Ход ноликов");
         }
         int win;
@@ -219,6 +264,7 @@ public class Game extends AppCompatActivity{
         win=сheckWin(O);
         if(win==1) {
             offButtons(0);
+            mText.setTextColor(Color.parseColor("#6200EA"));
             mText.setText("Нолики победили");
             mButtonB.setVisibility(View.VISIBLE);
             }
@@ -226,6 +272,7 @@ public class Game extends AppCompatActivity{
             win=сheckWin(X);
             if(win==1) {
                 offButtons(0);
+                mText.setTextColor(Color.parseColor("#D50000"));
                 mText.setText("Крестики победили");
                 mButtonB.setVisibility(View.VISIBLE);
             }
@@ -233,6 +280,7 @@ public class Game extends AppCompatActivity{
         turn[1]++;
         if ((turn[1]==9)&&(win==0)) {
             offButtons(0);
+            mText.setTextColor(Color.parseColor("#D50000"));
             mText.setText("Ничья");
             mButtonB.setVisibility(View.VISIBLE);
         }
@@ -373,6 +421,160 @@ public class Game extends AppCompatActivity{
             }
         }
         else{
+            logic[1]=0;
+        }
+    }
+//__________________________________________________________________________________________________
+    private void LogicO(int[] logic) { //0-порядок хода, 1-ход ИИ, 2-ход игрока, ОСТАЛЬНОЕ НЕ ВАЖНО
+        if (logic[0] == 0) {
+            if (logic[2] == 5) {
+                int R = (int) (Math.random() * 4);
+                int[] freeTurnsTemp = {1,3,7,9};
+                logic[1] = freeTurnsTemp[R];
+                logic[0] = 11;
+            }
+            else if (logic[2] == 1){
+                logic[1] = 5;
+                logic[0] = 21;
+            }
+            else {
+                logic[1] = 5;
+                logic[0] = 31;
+            }
+        }
+        else if (logic[0] == 31){
+            if(logic[2]==8) {
+                int R =(int)(Math.random() * 4);
+                int[] freeTurnsTemp = {1,3,7,9};
+                logic[1]=freeTurnsTemp[R];
+                logic[0] = 100;
+            }
+            else if (logic[2] == 7) {
+                int R = (int) (Math.random() * 4);
+                int[] freeTurnsTemp = {1,3,4,6};
+                logic[1] = freeTurnsTemp[R];
+                logic[0] = 32;
+            }
+            else if (logic[2] == 9) {
+                int R = (int) (Math.random() * 4);
+                int[] freeTurnsTemp = {1,3,4,6};
+                logic[1] = freeTurnsTemp[R];
+                logic[0] = 32;
+            }
+            else if (logic[2]==4) {
+                logic[1] = 1;
+                logic[0] = 32;
+            }
+            else if (logic[2]==6) {
+                logic[1] = 3;
+                logic[0] = 32;
+            }
+            else {
+                logic[1] = 0;
+                logic[0] = 100;
+            }
+        }
+        else if (logic[0] == 32) {
+            if((logic[2]==6)&&(logic[1]==3)) {
+                int R =(int)(Math.random()*2);
+                int[] freeTurnsTemp = {1,9};
+                logic[1]=freeTurnsTemp[R];
+            }
+            else if((logic[2]==6)&&(logic[1]==4)) {
+                logic[1]=9;
+            }
+            else if((logic[2]==4)&&(logic[1]==1)) {
+                int R =(int)(Math.random()*2);
+                int[] freeTurnsTemp = {3,7};
+                logic[1]=freeTurnsTemp[R];
+            }
+            else if((logic[2]==4)&&(logic[1]==6)) {
+                logic[1]=7;
+            }
+            else if((logic[2]==9)&&(logic[1]==1)) {
+                int R =(int)(Math.random()*2);
+                int[] freeTurnsTemp = {3,7};
+                logic[1]=freeTurnsTemp[R];
+            }
+            else if((logic[2]==7)&&(logic[1]==3)) {
+                int R =(int)(Math.random()*2);
+                int[] freeTurnsTemp = {1,9};
+                logic[1]=freeTurnsTemp[R];
+            }
+            else {
+                logic[1]=0;
+            }
+            logic[0] = 100;
+        }
+        else if (logic[0] == 21) {
+            if(logic[2]==9) {
+                int R = (int) (Math.random() * 4);
+                int[] freeTurnsTemp = {2,4,6,8};
+                logic[1] = freeTurnsTemp[R];
+                logic[0] = 100;
+            }
+            else if (logic[2]==8) {
+                int R = (int) (Math.random() * 4);
+                int[] freeTurnsTemp = {4,6,7,9};
+                logic[1] = freeTurnsTemp[R];
+                logic[0] = 221;
+            }
+            else if (logic[2]==6) {
+                int R = (int) (Math.random() * 4);
+                int[] freeTurnsTemp = {2, 3, 8, 9};
+                logic[1] = freeTurnsTemp[R];
+                logic[0] = 221;
+            }
+            else {
+                logic[1] = 0;
+                logic[0] = 222;
+            }
+        }
+        else if (logic[0] == 221) {
+            if(((logic[2] == 6)&&(logic[1] == 4))||((logic[2] == 6)&&(logic[1] == 9))||
+                    ((logic[2] == 8)&&(logic[1] == 9))||((logic[2] == 8)&&(logic[1] == 2))) {
+                int R =(int)(Math.random()*2);
+                int[] freeTurnsTemp = {3,7};
+                logic[1]=freeTurnsTemp[R];
+            }
+            else {
+                logic[1] = 0;
+                logic[0] = 100;
+            }
+        }
+        else if (logic[0] == 222) {
+            if((logic[2] == 8)&&(logic[1] == 2)) {
+                int R =(int)(Math.random()*2);
+                int[] freeTurnsTemp = {4,6};
+                logic[1]=freeTurnsTemp[R];
+            }
+            else if((logic[2] == 6)&&(logic[1] == 4)) {
+                int R =(int)(Math.random()*2);
+                int[] freeTurnsTemp = {2,8};
+                logic[1]=freeTurnsTemp[R];
+            }
+            else {
+                logic[1] = 0;
+            }
+            logic[0] = 100;
+        }
+        else if (logic[0] == 11) {
+            if (((logic[1] == 1) && (logic[2] == 9)) || ((logic[1] == 9) && (logic[2] == 1))) {
+                int R = (int) (Math.random() * 2);
+                int[] freeTurnsTemp = {3, 7};
+                logic[1] = freeTurnsTemp[R];
+            }
+            else if (((logic[1] == 7) && (logic[2] == 3)) || ((logic[1] == 3) && (logic[2] == 7))) {
+                int R = (int) (Math.random() * 2);
+                int[] freeTurnsTemp = {1, 9};
+                logic[1] = freeTurnsTemp[R];
+            }
+            else {
+                logic[1] = 0;
+            }
+            logic[0]=100;
+        }
+        else if (logic[0] == 100){
             logic[1]=0;
         }
     }
