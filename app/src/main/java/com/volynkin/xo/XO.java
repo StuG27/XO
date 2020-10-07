@@ -17,7 +17,7 @@ public class XO extends AppCompatActivity {
     private Button mOnlineButton;
     private Button mStatsButton;
     private static final int REQUEST_CODE = 0;
-    private char mAnswer = 'X';
+    private char mAnswer = 'X'; 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
